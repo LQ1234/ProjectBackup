@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Ethan simulator</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    img {
+      display: block;
+    }
+
+    #inv {
+      display: none;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+  <video autoplay="" id="inv"></video>
+  <canvas width=100 height=100 class=vdin></canvas>
+
+<script>
+  var scale=3;
+  var currnumind = 0;
+var mathlinks = [];
+function getMath(callback) {
+  var urls = [
+    "https://en.wikipedia.org/wiki/Cauchy–Riemann_equations",
+    "https://en.wikipedia.org/wiki/Partial_differential_equation",
+    "https://en.wikipedia.org/wiki/Homogeneous_polynomial",
+    "https://en.wikipedia.org/wiki/Multilinear_form",
+    "https://en.wikipedia.org/wiki/Leibniz_formula_for_determinants",
+    "https://en.wikipedia.org/wiki/Holomorphic_function",
+    "https://en.wikipedia.org/wiki/Differential_equation",
+    "https://en.wikipedia.org/wiki/Bernoulli_differential_equation",
+    "https://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation",
+    "https://en.wikipedia.org/wiki/Wave_equation",
+  ];
+  if (mathlinks.length < 5) {
+
+    currnumind++;
+    var url = urls[currnumind % urls.length];
+    var title = url.split("/").slice(4).join("/");
+
+    $.getJSON("https://en.wikipedia.org/w/api.php?format=json&action=parse&page=" + title + "&prop=text&callback=?",
+      function(data) {
+
+
+        var s = (data.parse.text["*"])
+
+        var matchs = (s.match(/(?!")(?:https:\/\/wikimedia\.org\/api\/rest_v1\/media\/math\/render\/svg\/.+?)(?=")/g));
+
+        for (var i = 0; i < matchs.length; i++) {
+          mathlinks.push(matchs[i]);
+        }
+      });
+  }
+  var lin = mathlinks.pop();
+  if (lin) {
+    var ajax = new XMLHttpRequest();
+    ajax.open("GET", lin, true);
+    ajax.send();
+    ajax.onload = function(e) {
+      var div = document.createElement("div");
+      div.innerHTML = ajax.responseText;
+      var svg = $(div).children()[0];
+      var xml = new XMLSerializer().serializeToString(svg);
+      var svg64 = btoa(xml); //for utf8: btoa(unescape(encodeURIComponent(xml)))
+      var b64start = 'data:image/svg+xml;base64,';
+      var image64 = b64start + svg64;
+
+      var img = $(document.createElement('img'));
+      img.attr("src", image64);
+
+      window.setTimeout(function() {
+        var wid = img.prop('naturalWidth'),
+          hei = img.prop('naturalHeight');
+        if (hei > 30 && hei < 50) {
+
+          callback(img);
+        } else {
+          getMath(callback);
+        }
+      }, 0);
+    }
+  }
+}
+getMath();
+
+function ispos(ey) { //https://stackoverflow.com/a/2752387/5771000
+
+  for (var poop = 0; poop < images.length; poop++) {
+    var i = images[poop];
+    if (i.y-10 <= ey && ey <= i.y + i.hei+20 && i.x < 20) {
+      return true;
+    }
+  }
+  return false;
+}
+setInterval(function() {
+  var can = $(".vdin")[0];
+
+  getMath(function(re) {
+
+    var xxv = 2;
+    var yyv = 0;
+    var image = re[0];
+    image.width*=scale;
+    image.height*=scale;
+
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d");
+
+    canvas.width = image.width;
+    canvas.height = image.height;
+
+    ctx.drawImage(image, 0, 0);
+
+    var imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+    for (var i = 0; i < imageData.data.length; i += 4) {
+      var avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
+
+      imageData.data[i] = 255 - avg;
+      imageData.data[i + 1] = 255 - avg;
+      imageData.data[i + 2] = 255 - avg;
+
+    }
+    ctx.putImageData(imageData, 0, 0, 0, 0, imageData.width*scale, imageData.height*scale);
+    var imgret = document.createElement("img");
+    imgret.src = canvas.toDataURL("image/png");
+    var xx = 00;
+    var yy = Math.random()*20;
+    	while(ispos(yy)){
+      yy += 30;
+      if(yy>$(window).height()){
+      console.log("pooped")
+      	return;
+      }
+	}
+    images.push({
+      wid: image.width,
+      hei: image.height,
+      x: xx - image.width,
+      y: yy,
+      xv: xxv,
+      yv: yyv,
+      img: imgret
+    });
+  });
+
+}, 500);
+
+var images = [];
+
+function drawmath(ctx) {
+  for (var i = images.length - 1; i >= 0; i--) {
+    images[i].x += images[i].xv;
+    images[i].y += images[i].yv;
+    ctx.drawImage(images[i].img, images[i].x, images[i].y);
+    if (images[i].x > ctx.canvas.width) {
+      images.splice(i, 1);
+    }
+  }
+}
+
+
+
+const video = document.querySelector('video');
+const vgaConstraints = {
+  video: {
+    width: {
+      min: 1
+    },
+    height: {
+      min: 1
+    }
+  }
+};
+
+navigator.mediaDevices.getUserMedia(vgaConstraints).
+then((stream) => {
+  video.srcObject = stream
+});
+
+var v = document.getElementById("inv");
+
+var cs = document.getElementsByClassName("vdin")
+
+v.addEventListener('play', function() {
+
+
+  window.setInterval(function() {
+    var cs = document.getElementsByClassName("vdin");
+
+    for (var k = 0; k < cs.length; k++) {
+      var c = cs[k];
+      c.width = $(window).width();
+      c.height = $(window).height();
+      var ctx = c.getContext('2d');
+
+      var badrat = video.videoWidth / video.videoHeight;
+      var goodrat = c.width / c.height;
+      var scale = 0;
+      if (badrat > goodrat) {
+        scale = video.videoHeight / c.height;
+      } else {
+        scale = video.videoWidth / c.width;
+      }
+
+      ctx.drawImage(v,
+        (c.width - video.videoWidth / scale) / 2,
+        (c.height - video.videoHeight / scale) / 2,
+        video.videoWidth / scale, video.videoHeight / scale);
+      drawmath(ctx);
+
+
+    }
+  }, 20);
+
+}, false);
+
+</script>
+</body>
+
+</html>

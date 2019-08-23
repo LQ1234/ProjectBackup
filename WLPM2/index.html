@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>WebGL</title>
+  <script src="noise3D.js"></script>
+  <script src="WGPM.js"></script>
+  <link rel="stylesheet" href="main.css">
+  <script src="main.js"></script>
+  <style>
+    #render {
+      width: 300vw;
+      transform: translate(-50%, -50%) scale(.3, 0.3) translate(50%, 50%);
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="border: 1px solid black;padding:2px;line-height:0px;margin-bottom:10px;">
+    <p>
+      <b>FPS: </b><span id=fps>0</span>
+      <b>Particles: </b><span id=particles>0</span>
+      <b>Computation: </b><span id=computationd>0</span>%
+      <b>Arrays: </b><span id=arraysd>0</span>%
+      <b>Conversion: </b><span id=conversiond>0</span>%
+      <b>Render: </b><span id=renderd>0</span>%
+    </p>
+  </div>
+  <div id=canvases>
+    <canvas hidden id="inputPosition"></canvas>
+    <canvas hidden id="inputVelocity"></canvas>
+
+    <canvas hidden id="computePositionA"></canvas>
+    <canvas hidden id="computeVelocityA"></canvas>
+    <canvas hidden id="computePositionB"></canvas>
+    <canvas hidden id="computeVelocityB"></canvas>
+    <canvas id="render" width=3000 height=3000></canvas>
+  </div>
+  <script>
+    var glT = document.createElement('canvas').getContext("webgl");
+    glT.getParameter(glT.MAX_TEXTURE_SIZE)
+    var noOfParticles = 10000;
+
+    document.getElementById("particles").innerHTML = noOfParticles;
+
+    Array.prototype.forEach.call(document.getElementById("canvases").children, function(a) {
+      if (a.id != "render") {
+        a.width = 2, a.height = noOfParticles
+      }
+    });
+
+    var c = document.getElementById("inputPosition");
+    var ctx = c.getContext("2d");
+    var imagedata = ctx.getImageData(0, 0, c.width, c.height);
+    //console.log(imagedata);
+    for (var i = 0; i < imagedata.data.length; i += 4) {
+      var x = .5;
+      var y = .5;
+
+      if (i % 8 == 0) {
+        imagedata.data[i] = Math.floor(x * 256);
+        imagedata.data[i + 1] = Math.floor(x * (2 << 15) % 256);
+        imagedata.data[i + 2] = 0;
+        imagedata.data[i + 3] = 255;
+      } else {
+        imagedata.data[i] = Math.floor(y * 256);
+        imagedata.data[i + 1] = Math.floor(y * (2 << 15) % 256);
+        imagedata.data[i + 2] = 0;
+        imagedata.data[i + 3] = 255;
+      }
+
+    }
+    console.log(imagedata.data);
+    ctx.putImageData(imagedata, 0, 0);
+    var c = document.getElementById("inputVelocity");
+    var ctx = c.getContext("2d");
+    var imagedata = ctx.getImageData(0, 0, c.width, c.height);
+    //console.log(imagedata);
+    for (var i = 0; i < imagedata.data.length; i += 4) {
+      var x = .5 + .01 * (Math.random() - .5);
+      var y = .5 + .01 * (Math.random() - .5);
+
+      if (i % 8 == 0) {
+        imagedata.data[i] = Math.floor(x * 256);
+        imagedata.data[i + 1] = Math.floor(x * (2 << 15) % 256);
+        imagedata.data[i + 2] = 0;
+        imagedata.data[i + 3] = 255;
+      } else {
+        imagedata.data[i] = Math.floor(y * 256);
+        imagedata.data[i + 1] = Math.floor(y * (2 << 15) % 256);
+        imagedata.data[i + 2] = 0;
+        imagedata.data[i + 3] = 255;
+      }
+    }
+    console.log(imagedata.data);
+
+    ctx.putImageData(imagedata, 0, 0);
+    /*
+    doc(document.getElementById("canin"));
+    doc(document.getElementById("canin1"));
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(10, 10, 150, 25);
+    ctx.fillStyle = "blue";
+    ctx.fillRect(60, 60, 20, 180);
+    ctx.fillStyle = "green";
+    ctx.fillRect(60, 160, 180, 50);
+    ctx.fillStyle = "black";
+    ctx.font = "20px Arial";
+    ctx.fillText("Hello World", 10, 50);
+    ctx.fillStyle = "purple";
+    ctx.font = "40px Courier";
+    ctx.fillText("Testing", 100, 150);
+    function doc(c){
+      var ctx = c.getContext("2d");
+
+      ctx.fillStyle = "white";
+      ctx.fillRect(0,0,c.width,c.height);
+      for(var i=0;i<50;i++){
+        var r=Math.random();
+        ctx.fillStyle = `rgb(${Math.random()*256},${Math.random()*256},${Math.random()*256})`;
+        if(r<.33){
+          ctx.font = (Math.random()*20+15)+"px Courier";
+          var rand=["Testing","Code","Minecraft"];
+          ctx.fillText(rand[Math.floor(Math.random()*3)], Math.random()*c.width-20, Math.random()*c.height+10);
+        }else if(r<.66){
+          ctx.fillRect(Math.random()*c.width-20, Math.random()*c.height-20, Math.random()*50, Math.random()*50);
+        }else{
+          ctx.beginPath();
+          ctx.arc(Math.random()*c.width-20, Math.random()*c.height-20, Math.random()*50, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+    }
+    */
+    //ctx.fillRect(1,1,298,298);
+  </script>
+</body>
+
+</html>
