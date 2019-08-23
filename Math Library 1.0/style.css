@@ -1,0 +1,16 @@
+#bg {
+  position: fixed;
+  transform: translate(-50%, -50%) scale(.5);
+  left: 50%;
+  top: 50%;
+  background-color: white;
+}
+
+#_LOADIMG {
+  display: none;
+}
+
+body {
+  background-color: white;
+  padding: 0px;
+}
